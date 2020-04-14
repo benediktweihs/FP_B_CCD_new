@@ -15,8 +15,8 @@ data = np.array(convert("table", "txt", ';'), dtype=float)
 data_b = np.array(convert("table_b", "txt", ';'), dtype=float)
 mean, std = data[0], data[1]
 meanB, stdB = data_b[0], data_b[1]
-sigma_ron = 7.14
-#delta_sigma_ron = i need U Patrick
+sigma_ron = 6.93
+delta_sigma_ron = 0.02
 
 # n_adu(sigma_tot) mit Parabel fkt. fitten
 def fit(x, a, b, c):
