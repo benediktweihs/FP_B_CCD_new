@@ -4,7 +4,7 @@ from scipy.optimize import *
 
 
 def funk(temper, a, b, c):
-    # return a*temper**(3/2)*np.exp(-b/(2*temper))
+    # return a*temper**(3/2)*np.exp(-b/(2*temper))  #
     k = 1.3806505*10**(-23)/(1.60217653*10**(-19))
     return (a*temper**(3/2)*np.exp(-b/(2*k*temper))+c*temper**(3)*np.exp(-b/(k*temper)))
 

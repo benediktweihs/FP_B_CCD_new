@@ -14,7 +14,7 @@ def fit_funk(x, y, y_err):
     error = []
     for i in range(len(popt)):
         try:
-            error.append(np.absolute(pcov[i][i])**0.5)
+            error.append(np.absolute(pcov[i][i])**0.5)  #
         except:
             error.append(0.00)
     value = []

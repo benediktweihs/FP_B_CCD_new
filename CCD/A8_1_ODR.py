@@ -11,7 +11,7 @@ def fit_funk(x, y, y_err):
     linear = Model(funk)
     myodr = ODR(mydata, linear, beta0=[1., 1., 1.])
     myout = myodr.run()
-    x_fit = np.linspace(x[0], x[-1], 10000)
+    x_fit = np.linspace(x[0], x[-1], 10000)  #
     y_fit = funk(myout.beta, x_fit)
     myout.pprint()
     return x_fit, y_fit
