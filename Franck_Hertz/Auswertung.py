@@ -58,6 +58,7 @@ def parabolaFit(file, minimum, boundary, show):
         minima.append(minMitFehlerAusFit(popt, pcov))
 
     if show:
+        plt.xlabel(file)
         plt.show()
         plt.close()
     return minima
@@ -131,17 +132,22 @@ def determineEa(minimaTot):
     return linear(.5, a, b), chisqu, a
 
 if __name__ == '__main__':
-    directory = "/home/benedikt/PycharmProjects/FP_B_CCD_Patrick/Franck_Hertz/Data"
+    directory = "C:\\Users\\weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Data"
     estimations = [
-        [[2.5, 3.3], [4.5, 5.55]],
-        [[2.55, 3.35], [4.45, 5.45], [6.4, 7.2]],
-        [[2.5, 3.3], [4.4, 5.4], [6.4, 7.2]], # unused
-        [[2.5, 3.3], [4.4, 5.4], [6.4, 7.2]],
-        [[2.4, 3.3], [4.35, 5.25]],
-        [[2.65, 3.5], [4.55, 5.65]],
-        [[2.5, 3.3], [4.4, 5.4], [6.4, 7.2]]
+        [[2.5, 3.3], [4.5, 5.35], [6.4, 7.2]],
+        [[2.4, 3.35], [4.35, 5.25]],
+        [[2.65, 3.5], [4.6, 5.6]],
+        [[2.5, 3.3], [4.5, 5.4], [6.3, 7.2]],
+        [[2.5, 3.35], [4.55, 5.4], [6.4, 7.3]],
+        [[2.55, 3.5], [4.55, 5.6]],
+        [[2.5, 3.3], [4.4, 5.4], [6.4, 7.2]] # unused
     ]
-    # TODO estimationsMax und files in array bei der Einhüllende fitten Sinn macht.
+    filesParabola = ["T0001ASLL.CSV", "T0002ALL.CSV", "T0004.CSV"]  # TODO t0005.csv?
+    estimationsMax = [
+        [[1.9, 2.4], [4, 4.4], [6,6.45]],
+        [[1.9, 2.4], [4, 4.4]],
+        [[1.9, 2.4], [4, 4.4], [6, 6.45]]
+    ]
     # TODO auswahlfehler aka Auswirkung von boundary aufs Ergebnis
     minimaTot = []
     for i, filename in enumerate(os.listdir(directory)):
