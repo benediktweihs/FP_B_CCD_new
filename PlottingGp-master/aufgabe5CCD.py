@@ -56,7 +56,6 @@ plt.plot(scaleX*xFit, scaleY*yFitB, 'b-', lw=2)
 plt.plot(scaleX*mean[0:len(mean)-cutMax:], scaleY*std[0:len(mean)-cutMax:]**2, 'gx', markersize=5)
 plt.plot(scaleX*xFit, scaleY*yFit, 'g-', lw=2)
 #plt.plot(scaleX*xFit, scaleY*yFit2, 'g--', lw=2)  # fit mit 2/3 fitparameter ist gleich
-
 plt.savefig(parent + "/PlottingGp-master/Graphen/aufgabe5.pdf")
 
 
@@ -65,6 +64,7 @@ popt2CheckM, pcov2CheckM = curve_fit(fitCheckMinus, mean[0:len(mean)-cutMax:], s
 poptB2CheckM, pcovB2CheckM = curve_fit(fitCheckMinus, mean[0:len(mean)-cutMax:], std[0:len(mean)-cutMax:]**2)
 popt2CheckP, pcov2CheckP = curve_fit(fitCheckPlus, meanB[0:len(meanB)-cutMaxB:], stdB[0:len(meanB)-cutMaxB:]**2)
 poptB2CheckP, pcovB2CheckP = curve_fit(fitCheckPlus, meanB[0:len(meanB)-cutMaxB:], stdB[0:len(meanB)-cutMaxB:]**2)
+
 
 # sigma_ron hat ja auch einen Fehler... und taucht aber in fitfunktion auf
 # standard Vorgehensweise is jetzt den fit dreimal zu machen.. einmal mit mittwert für sigma_ron

@@ -6,7 +6,7 @@ import sys
 #convert nimmt ein txt file mit vorgegebener Struktur und gibt eine Matrix zurück
 def convert(file_name,format,delimiter):
     parent = os.path.dirname(os.path.dirname(__file__))
-    file = parent + "/PlottingGp-master/Rohdaten/" + file_name + "." + format
+    file = parent + "/FP_B_CCD_Patrick/PlottingGp-master/Rohdaten/" + file_name + "." + format
 
     #Multidimensionales array -> enthält am Ende alle Daten
     with open(file) as csv_file:
