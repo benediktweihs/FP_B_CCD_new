@@ -5,11 +5,14 @@ from scipy.optimize import curve_fit
 from Franck_Hertz.converter import convert
 from uncertainties import *
 from uncertainties import unumpy
+from matplotlib import rc
 from scipy.special import voigt_profile
+
+rc('text', usetex=True)
 
 parent = os.path.dirname(os.path.dirname(__file__))
 t = ufloat(9.14, 0.01)
-errY = 0.02  # 2 prozent
+errY = 0.03  # 2 prozent
 
 # unwichtig... arrays schneiden usw.
 def parabel(x, a, b, c):
@@ -56,6 +59,13 @@ def cut(arr, compare, minimum, maximum):
     return np.array(temp)
 
 def parabolaFit(file, minimum, boundary, show):
+    if show:
+        plt.xlabel(r'$\frac{U_B}{t}$ $(V)$')
+        plt.ylabel(r'$U_K \propto I_K$ $(V)$')
+    name = ""
+    for f in file:
+        if f=='.': break
+        name = name + f
     data = np.array(convert(file, ',', 16), dtype=float)
     x = cutMin(data[1], data[3], minimum)
     y = cutMin(data[3], data[3], minimum)
@@ -75,16 +85,48 @@ def parabolaFit(file, minimum, boundary, show):
         minima.append(minMitFehlerAusFit(popt, pcov))
 
     if show:
-        plt.xlabel(file)
-        plt.savefig("C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\allesUnkor" + file + ".pdf")
+        plt.savefig("C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\allesUnkor" + name + ".pdf")
+        plt.savefig("C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\allesUnkor" + name + ".png")
         plt.close()
     return minima
 
-def offset(i):
-    if i%2 == 0:
-        return 0.02*((i//2)+1)
-    if i%2 == 1:
-        return 0.02*((i//2)-1)
+def offset(n):
+    retArrOnes, retArrTwos = [], []
+    N = len(n)
+    ones, twos, help = [], [], []
+    for i in n:
+        if i == 1:
+            ones.append(1)
+            help.append(1)
+        else:
+            twos.append(2)
+            help.append(2)
+    for temp in [ones, twos]:
+        if temp[0]==1: retArr = retArrOnes
+        else: retArr = retArrTwos
+        for counter, i in enumerate(temp):
+            if N % 2 == 1 and counter==0:
+                retArr.append(i)
+                flag=True
+
+            elif N % 2 == 0 and counter==0:
+                retArr.append(i + ((-1) ** counter) * 0.01 * ((counter + 1) - counter % 2))
+                flag=False
+
+            else:
+                if flag: counter -= 1
+                retArr.append(i+((-1)**counter)*0.01*((counter+1)-counter%2))
+    tot = []
+    c1, c2 = 0, 0
+    for c, i in enumerate(n):
+        if help[c]==1:
+            tot.append(retArrOnes[c1])
+            c1+=1
+        else:
+            tot.append(retArrTwos[c2])
+            c2+=1
+    return tot
+
 
 def gaussianFit(file, minimum, boundary, boundaryMax, show, cutUpperOfPlot):
     name = ""
@@ -94,10 +136,13 @@ def gaussianFit(file, minimum, boundary, boundaryMax, show, cutUpperOfPlot):
     data = np.array(convert(file, ',', 16), dtype=float)
     x = cutMin(data[1], data[3], minimum)
     y = cutMin(data[3], data[3], minimum)
-    if show: plt.plot(x, y, 'bo', markersize=1)
+    #if show: plt.figure(figsize=(5, 4))
+    if show:
+        plt.xlabel(r'$\frac{U_B}{t}$ $(V)$')
+        plt.ylabel(r'$U_K \propto I_K$ $(V)$')
+        plt.plot(x, y, 'bo', markersize=1)
 
     maxima, maximaY = [], []
-
     # fitte Maxima und ziehe Parable ab aka einhüllende bestimmen
     for i, x0 in enumerate(boundaryMax):
         xLower, xUpper = x0[0], x0[1]
@@ -111,17 +156,20 @@ def gaussianFit(file, minimum, boundary, boundaryMax, show, cutUpperOfPlot):
         yFit = parabel(xFit, *popt)  # WENN DOCH GAUSS HIER ÄNDERN
         maximum = minMitFehlerAusFit(popt, pcov)
         maximumY = parabel(maximum, *fitPar) # WENN DOCH GAUSS HIER ÄNDERN
-        if show: plt.plot(xFit, yFit, 'r-', lw=3)
+        if show: plt.plot(xFit, yFit, 'y-', lw=2)
         maxima.append(maximum)
         maximaY.append(maximumY)
-    if show: plt.errorbar(unumpy.nominal_values(maxima), unumpy.nominal_values(maximaY), yerr=unumpy.std_devs(maximaY), fmt='ro', linewidth=0.8, capsize=2, capthick=0.6, markersize=0)
+    if show: plt.plot(unumpy.nominal_values(maxima), unumpy.nominal_values(maximaY), 'kx', markersize=3)
+
+    # einhüllende fitten und abziehen
+    poptTot, pcovTot = curve_fit(parabel, unumpy.nominal_values(maxima), unumpy.nominal_values(maximaY), sigma=unumpy.std_devs(maximaY))
+    xFitTot = np.linspace(x[0], x[-1], 1000)
     if show:
+        plt.plot(xFitTot, parabel(xFitTot, *poptTot), 'r-', lw=2)
         plt.savefig("C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\maxFit" + name + ".pdf")
         plt.savefig("C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\maxFit" + name + ".png", dpi=400)
         plt.close()
 
-    # einhüllende fitten und abziehen
-    poptTot, pcovTot = curve_fit(parabel, unumpy.nominal_values(maxima), unumpy.nominal_values(maximaY), sigma=unumpy.std_devs(maximaY))
     poptLow = [p + np.sqrt(pcov[i][i])/2 for i, p in enumerate(poptTot)]
     poptHigh = [p - np.sqrt(pcov[i][i])/2 for i, p in enumerate(poptTot)]
     minMean = gaussHelp(x, y, boundary, poptTot, show, name, cutUpperOfPlot)
@@ -134,6 +182,10 @@ def gaussianFit(file, minimum, boundary, boundaryMax, show, cutUpperOfPlot):
     return mReturn
 
 def gaussHelp(x, y, boundary, poptTot, show, file, cutUpperOfPlot):
+    #if show: plt.figure(figsize=(5, 3))
+    if show:
+        plt.xlabel(r'$\frac{U_B}{t}$ $(V)$')
+        plt.ylabel(r'$U_K - U_{einh.} \propto I_K - I_{einh.}$ $(V)$')
     print(cutUpperOfPlot)
     minima = []
     y=parabel(x, *poptTot)-y
@@ -144,7 +196,7 @@ def gaussHelp(x, y, boundary, poptTot, show, file, cutUpperOfPlot):
             xeff.append(x[i])
     if show: plt.plot(xeff, yeff, 'bo', markersize=1)
 
-    # fitte Gaussfunktion zu minima
+    # fitte Gaussfunktion zu minima/maxima
     for i, x0 in enumerate(boundary):
         xLower, xUpper = boundary[i][0], boundary[i][1]
         domainFit = cut(x, x, xLower, xUpper)
@@ -156,13 +208,13 @@ def gaussHelp(x, y, boundary, poptTot, show, file, cutUpperOfPlot):
         #minimum = minMitFehlerAusFit(popt, pcov)  #PARABEL
         #plt.plot(xFit, gaussian(xFit, .1, 1, xLower + (xUpper-xLower)/2, 0))
         if show:
-            plt.plot(xFit, yFit, 'r-', lw=3)
+            plt.plot(xFit, yFit, 'r-', lw=2)
         minima.append(minimum)
     if show:
         plt.savefig(
-            "C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\korrigiert" + file + ".pdf")
+            "C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\korrigiert" + file + ".pdf", bbox_inches='tight')
         plt.savefig(
-            "C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\korrigiert" + file + ".png", dpi=400)
+            "C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\korrigiert" + file + ".png", dpi=400, bbox_inches='tight')
         plt.close()
 
     if show:
@@ -172,6 +224,8 @@ def gaussHelp(x, y, boundary, poptTot, show, file, cutUpperOfPlot):
 
 def determineEa(minimaTot, name):
     y, n = [], []
+    plt.ylabel(r'$\frac{\Delta U_B(n)}{t}$ $(V)$')
+    plt.xlabel(r'$n$')
     for i, arr in enumerate(minimaTot):
         y.append(arr[1]-arr[0])
         n.append(1)
@@ -182,8 +236,8 @@ def determineEa(minimaTot, name):
     nFit = np.linspace(.5,2,1000)
     faktor = nominal_value(t)
     yFit = linear(nFit, faktor*popt[0], faktor*popt[1])
-    plt.errorbar(n, faktor*unumpy.nominal_values(y), yerr=faktor*unumpy.std_devs(y), fmt='ro', linewidth=0.8, capsize=2, capthick=0.6, markersize=0)
-    plt.plot(n, faktor*unumpy.nominal_values(y), 'ko', markersize=2)
+    plt.errorbar(offset(n), faktor*unumpy.nominal_values(y), yerr=faktor*unumpy.std_devs(y), fmt='ro', linewidth=0.8, capsize=2, capthick=0.6, markersize=0)
+    plt.plot(offset(n), faktor*unumpy.nominal_values(y), 'ko', markersize=2)
     plt.plot(nFit, yFit, 'k-', lw=.6)
     plt.savefig(
             "C:\\Users\\Benedikt Weihs\\PycharmProjects\\FP_B_CCD_new\\Franck_Hertz\\Graphen\\final" + name + ".pdf")
@@ -212,21 +266,26 @@ if __name__ == '__main__':
         [[1.6, 2.8], [3.5, 4.7], [5.7, 6.8]]
     ]  # maxima bei abbildungen die nit in sättigung sin
     estimationsMin = [
-        [[2.3, 3.8], [4.35, 5.7], [6.3, 7.6]],
+        [[2.2, 3.9], [4.2, 5.85], [6.2, 7.7]],
         [[2.35, 3.75], [4.3, 5.8], [6.3, 7.8]]
     ]  # gleiche zeilen wie in estimations nur halt für die Dateien in filesParabola
     minimaTot = []
 
     # mit parabel fit:
-    '''# E_a und lambda berechnen:
+    # E_a und lambda berechnen:
     # TODO auswahlfehler aka Auswirkung von boundary aufs Ergebnis
     for i, filename in enumerate(os.listdir(directory)):
         # FIT DER MINIMA MIT PARABEL
         print(filename)
         if filename == "T0007.CSV": continue
         minimaTot.append(parabolaFit(filename, 0.03, estimations[i], True))  # nahe null auf der y achse ganz viele datenpunkte
-    u, chisqu, a = determineEa(minimaTot)'''
+    u, chisqu, a = determineEa(minimaTot, "stupid")
+    print("stupid way: ")
+    print("___Lambda___ " + str((5e-3/(2*t*u))*(a*t)))
+    print("\n___E_a___ = " + str(t*u))
+    print("\n___red_chisqu___ = " + str(chisqu))
 
+    minimaTot = []
     mx = [.13, .4]
     # Korrektur durch abziehen der Kennlinie ohne Minima - geht nur wenn Signal nicht in sättigung ist.
     for i, filename in enumerate(filesParabola):
